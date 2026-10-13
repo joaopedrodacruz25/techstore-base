@@ -1,6 +1,12 @@
 export function formatarPreco(valor) {
-  return Number(valor).toLocaleString('pt-BR', {
+  const numero = Number(valor)
+
+  if (!Number.isFinite(numero)) {
+    return 'Preço indisponível'
+  }
+
+  return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
-  })
+  }).format(numero)
 }

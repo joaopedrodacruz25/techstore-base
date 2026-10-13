@@ -1,4 +1,6 @@
 import { Link, useParams } from 'react-router'
+import { produtoDisponivel } from '../utils/carrinho'
+import { formatarPreco } from '../utils/formatarPreco'
 
 export default function PaginaProduto({ produtos, onAdicionar }) {
   const { id } = useParams()
@@ -15,6 +17,7 @@ export default function PaginaProduto({ produtos, onAdicionar }) {
     )
   }
 
+  const vendaDisponivel = produtoDisponivel(produto)
   const relacionados = produtos
     .filter((item) => item.category === produto.category && item.id !== produto.id)
     .slice(0, 4)
@@ -37,16 +40,16 @@ export default function PaginaProduto({ produtos, onAdicionar }) {
           <p className="card-avaliacao">
             ★ {produto.rating.rate} <span>({produto.rating.count} avaliações)</span>
           </p>
-          <p className="detalhe-preco">R$ {produto.price.toFixed(2).replace('.', ',')}</p>
+          <p className="detalhe-preco">{formatarPreco(produto.price)}</p>
           <p className="detalhe-descricao">{produto.description}</p>
           <p className="detalhe-estoque">{produto.estoque} unidades disponíveis</p>
 
           <button
             className="botao botao-grande"
             onClick={() => onAdicionar(produto)}
-            disabled={produto.estoque === 0}
+            disabled={!vendaDisponivel}
           >
-            Adicionar ao carrinho
+            {vendaDisponivel ? 'Adicionar ao carrinho' : 'Indisponível'}
           </button>
 
           <ul className="detalhe-garantias">
@@ -66,9 +69,9 @@ export default function PaginaProduto({ produtos, onAdicionar }) {
               </div>
               <h3 className="card-titulo">{item.title}</h3>
             </Link>
-            <p className="preco">R$ {Number(item.price).toFixed(2).replace('.', ',')}</p>
-            <button className="botao" onClick={() => onAdicionar(item)}>
-              Adicionar ao carrinho
+            <p className="preco">{formatarPreco(item.price)}</p>
+            <button className="botao" onClick={() => onAdicionar(item)} disabled={!produtoDisponivel(item)}>
+              {produtoDisponivel(item) ? 'Adicionar ao carrinho' : 'Indisponível'}
             </button>
           </article>
         ))}

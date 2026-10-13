@@ -1,8 +1,12 @@
 import { Link } from 'react-router'
+import { normalizarPreco, produtoDisponivel } from '../utils/carrinho'
 import { formatarPreco } from '../utils/formatarPreco'
 
 export default function ProdutoCard({ produto, onAdicionar }) {
-  const esgotado = produto.estoque === 0
+  const esgotado = Number(produto.estoque) === 0
+  const vendaDisponivel = produtoDisponivel(produto)
+  const precoNormalizado = normalizarPreco(produto.price)
+  const precoOriginalNormalizado = normalizarPreco(produto.precoOriginal)
 
   return (
     <article className="card">
@@ -18,19 +22,21 @@ export default function ProdutoCard({ produto, onAdicionar }) {
       </p>
 
       <div className="card-precos">
-        {produto.precoOriginal && (
-          <span className="preco-original">{formatarPreco(produto.precoOriginal)}</span>
+        {precoOriginalNormalizado !== null && (
+          <span className="preco-original">{formatarPreco(precoOriginalNormalizado)}</span>
         )}
-        <span className="preco">{formatarPreco(produto.price)}</span>
+        <span className="preco">{formatarPreco(precoNormalizado)}</span>
       </div>
 
       <div className="card-selos">
-        {produto.price > 100 && <span className="selo selo-frete">Frete grátis</span>}
+        {precoNormalizado !== null && precoNormalizado > 100 && (
+          <span className="selo selo-frete">Frete grátis</span>
+        )}
         {esgotado && <span className="selo selo-esgotado">Esgotado</span>}
       </div>
 
-      <button className="botao" onClick={() => onAdicionar(produto)} disabled={esgotado}>
-        Adicionar ao carrinho
+      <button className="botao" onClick={() => onAdicionar(produto)} disabled={esgotado || !vendaDisponivel}>
+        {vendaDisponivel ? 'Adicionar ao carrinho' : 'Indisponível'}
       </button>
     </article>
   )

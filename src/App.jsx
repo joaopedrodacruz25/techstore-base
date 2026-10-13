@@ -9,6 +9,7 @@ import Carrinho from './pages/Carrinho'
 import Estoque from './pages/Estoque'
 import { buscarProdutos } from './services/produtos'
 import { buscarClientes } from './services/clientes'
+import { produtoDisponivel } from './utils/carrinho'
 
 export default function App() {
   const [produtos, setProdutos] = useState([])
@@ -31,21 +32,23 @@ export default function App() {
   }, [])
 
   function adicionarAoCarrinho(produto) {
-    setCarrinho(carrinho.concat(produto))
+    if (!produtoDisponivel(produto)) {
+      return
+    }
+
+    setCarrinho((carrinhoAtual) => carrinhoAtual.concat(produto))
   }
 
   function removerUmaUnidade(produtoId) {
-    // Remove só a primeira unidade encontrada do produto
-    let removido = false
-    setCarrinho(
-      carrinho.filter((produto) => {
-        if (!removido && produto.id === produtoId) {
-          removido = true
-          return false
-        }
-        return true
-      })
-    )
+    setCarrinho((carrinhoAtual) => {
+      const indiceParaRemover = carrinhoAtual.findIndex((produto) => produto.id === produtoId)
+
+      if (indiceParaRemover === -1) {
+        return carrinhoAtual
+      }
+
+      return carrinhoAtual.filter((produto, indice) => indice !== indiceParaRemover)
+    })
   }
 
   const clienteAtual = clientes.find((cliente) => cliente.id === clienteAtualId)
