@@ -1,5 +1,7 @@
+import { Link } from 'react-router'
+
 // Página usada pelo time de estoque para acompanhar a quantidade de cada produto
-export default function Estoque({ produtos }) {
+export default function Estoque({ produtos, listaEspera = [] }) {
   // slice cria uma cópia, para o sort não alterar a lista original
   const ordenados = produtos.slice().sort((a, b) => a.estoque - b.estoque)
 
@@ -22,7 +24,11 @@ export default function Estoque({ produtos }) {
           <tbody>
             {ordenados.map((produto) => (
               <tr key={produto.id}>
-                <td>{produto.title}</td>
+                <td>
+                  <Link to={`/produto/${produto.id}`}>
+                    {produto.title}
+                  </Link>
+                </td>
                 <td>{produto.category}</td>
                 <td>{produto.estoque}</td>
                 <td>
@@ -36,6 +42,37 @@ export default function Estoque({ produtos }) {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="lista-espera-container">
+        <h2>Lista de espera</h2>
+
+        {listaEspera.length === 0 ? (
+          <p className="aviso">Nenhum cliente cadastrou interesse por produtos esgotados.</p>
+        ) : (
+          <table className="tabela">
+            <thead>
+              <tr>
+                <th>Produto</th>
+                <th>Nome</th>
+                <th>E-mail</th>
+              </tr>
+            </thead>
+            <tbody>
+              {listaEspera.map((registro) => {
+                const produto = produtos.find((item) => item.id === registro.produtoId)
+
+                return (
+                  <tr key={registro.id}>
+                    <td>{produto ? produto.title : 'Produto removido'}</td>
+                    <td>{registro.nome}</td>
+                    <td>{registro.email}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        )}
       </div>
     </section>
   )

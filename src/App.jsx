@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Routes, Route } from 'react-router'
 import Header from './components/Header'
 import Footer from './components/Footer'
@@ -7,6 +7,7 @@ import Loja from './pages/Loja'
 import PaginaProduto from './pages/PaginaProduto'
 import Carrinho from './pages/Carrinho'
 import Estoque from './pages/Estoque'
+import Lojista from './pages/Lojista'
 import { buscarProdutos } from './services/produtos'
 import { buscarClientes } from './services/clientes'
 import { produtoDisponivel } from './utils/carrinho'
@@ -18,6 +19,8 @@ export default function App() {
   const [carrinho, setCarrinho] = useState([])
   const [clientes, setClientes] = useState([])
   const [clienteAtualId, setClienteAtualId] = useState(null)
+  const [listaEspera, setListaEspera] = useState([])
+  const ultimoCliqueRef = useRef({})
 
   useEffect(() => {
     buscarProdutos()
@@ -36,6 +39,14 @@ export default function App() {
       return
     }
 
+    const agora = Date.now()
+    const ultimaAdicao = ultimoCliqueRef.current[produto.id] || 0
+
+    if (agora - ultimaAdicao < 300) {
+      return
+    }
+
+    ultimoCliqueRef.current[produto.id] = agora
     setCarrinho((carrinhoAtual) => carrinhoAtual.concat(produto))
   }
 
@@ -49,6 +60,29 @@ export default function App() {
 
       return carrinhoAtual.filter((produto, indice) => indice !== indiceParaRemover)
     })
+  }
+
+  function registrarEspera(produtoId, nome, email) {
+    const valorNome = nome.trim()
+    const valorEmail = email.trim()
+
+    if (!produtoId || !valorNome || !valorEmail) {
+      return false
+    }
+
+    setListaEspera((atual) => {
+      const jaExiste = atual.some(
+        (item) => item.produtoId === produtoId && item.email.toLowerCase() === valorEmail.toLowerCase()
+      )
+
+      if (jaExiste) {
+        return atual
+      }
+
+      return [...atual, { id: crypto.randomUUID(), produtoId, nome: valorNome, email: valorEmail }]
+    })
+
+    return true
   }
 
   const clienteAtual = clientes.find((cliente) => cliente.id === clienteAtualId)
@@ -70,7 +104,13 @@ export default function App() {
             />
             <Route
               path="/produto/:id"
-              element={<PaginaProduto produtos={produtos} onAdicionar={adicionarAoCarrinho} />}
+              element={
+                <PaginaProduto
+                  produtos={produtos}
+                  onAdicionar={adicionarAoCarrinho}
+                  onRegistrarEspera={registrarEspera}
+                />
+              }
             />
             <Route
               path="/carrinho"
@@ -84,7 +124,14 @@ export default function App() {
                 />
               }
             />
-            <Route path="/estoque" element={<Estoque produtos={produtos} />} />
+            <Route
+              path="/estoque"
+              element={<Estoque produtos={produtos} listaEspera={listaEspera} />}
+            />
+            <Route
+              path="/lojista"
+              element={<Lojista produtos={produtos} listaEspera={listaEspera} />}
+            />
           </Routes>
         )}
       </main>

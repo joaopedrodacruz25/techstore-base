@@ -1,10 +1,15 @@
+import { useState } from 'react'
 import { Link, useParams } from 'react-router'
+import ProdutoCard from '../components/ProdutoCard'
 import { produtoDisponivel } from '../utils/carrinho'
 import { formatarPreco } from '../utils/formatarPreco'
 
-export default function PaginaProduto({ produtos, onAdicionar }) {
+export default function PaginaProduto({ produtos, onAdicionar, onRegistrarEspera }) {
   const { id } = useParams()
   const produto = produtos.find((item) => item.id === id)
+  const [nome, setNome] = useState('')
+  const [email, setEmail] = useState('')
+  const [mensagemEspera, setMensagemEspera] = useState('')
 
   if (!produto) {
     return (
@@ -18,9 +23,24 @@ export default function PaginaProduto({ produtos, onAdicionar }) {
   }
 
   const vendaDisponivel = produtoDisponivel(produto)
+  const esgotado = Number(produto.estoque) === 0
   const relacionados = produtos
     .filter((item) => item.category === produto.category && item.id !== produto.id)
     .slice(0, 4)
+
+  function enviarEspera(evento) {
+    evento.preventDefault()
+
+    const enviado = onRegistrarEspera(produto.id, nome, email)
+
+    if (enviado) {
+      setMensagemEspera('Você foi adicionado à lista de espera.')
+      setNome('')
+      setEmail('')
+    } else {
+      setMensagemEspera('Preencha nome e e-mail para receber o aviso.')
+    }
+  }
 
   return (
     <section>
@@ -52,6 +72,40 @@ export default function PaginaProduto({ produtos, onAdicionar }) {
             {vendaDisponivel ? 'Adicionar ao carrinho' : 'Indisponível'}
           </button>
 
+          {esgotado && (
+            <form className="form-espera" onSubmit={enviarEspera}>
+              <p className="texto-esgotado">
+                Produto esgotado. Deixe seu nome e e-mail para receber um aviso quando voltar.
+              </p>
+
+              <label className="campo-espera">
+                <span>Nome</span>
+                <input
+                  type="text"
+                  value={nome}
+                  onChange={(evento) => setNome(evento.target.value)}
+                  placeholder="Seu nome"
+                />
+              </label>
+
+              <label className="campo-espera">
+                <span>E-mail</span>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(evento) => setEmail(evento.target.value)}
+                  placeholder="seu@email.com"
+                />
+              </label>
+
+              <button type="submit" className="botao botao-secundario">
+                Avisar quando voltar
+              </button>
+
+              {mensagemEspera && <p className="mensagem-espera">{mensagemEspera}</p>}
+            </form>
+          )}
+
           <ul className="detalhe-garantias">
             <li>Troca grátis em até 30 dias</li>
             <li>Parcele em até 10x sem juros</li>
@@ -62,18 +116,7 @@ export default function PaginaProduto({ produtos, onAdicionar }) {
       <h2>Produtos relacionados</h2>
       <div className="grade">
         {relacionados.map((item) => (
-          <article key={item.id} className="card">
-            <Link to={`/produto/${item.id}`} className="card-link">
-              <div className="card-imagem-moldura">
-                <img src={item.image} alt={item.title} className="card-imagem" />
-              </div>
-              <h3 className="card-titulo">{item.title}</h3>
-            </Link>
-            <p className="preco">{formatarPreco(item.price)}</p>
-            <button className="botao" onClick={() => onAdicionar(item)} disabled={!produtoDisponivel(item)}>
-              {produtoDisponivel(item) ? 'Adicionar ao carrinho' : 'Indisponível'}
-            </button>
-          </article>
+          <ProdutoCard key={item.id} produto={item} onAdicionar={onAdicionar} />
         ))}
       </div>
     </section>

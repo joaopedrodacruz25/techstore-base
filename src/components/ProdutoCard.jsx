@@ -29,7 +29,7 @@ export default function ProdutoCard({ produto, onAdicionar }) {
       </div>
 
       <div className="card-selos">
-        {precoNormalizado !== null && precoNormalizado > 100 && (
+        {precoNormalizado !== null && precoNormalizado >= 200 && (
           <span className="selo selo-frete">Frete grátis</span>
         )}
         {esgotado && <span className="selo selo-esgotado">Esgotado</span>}
